@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">AlyoongChat</string>
+    <string name="title_activity_sign_in">SignInActivity</string>
+    <string name="title_activity_sign_in2">SignIn2Activity</string>
+    <string name="welcome_back">Welcome Back</string>
+    <string name="login_to_continue">Login to continue</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in">Sign In</string>
+    <string name="create_new_account">Create New Account</string>
+    <string name="add_image">add image</string>
+    <string name="name">Name</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="sign_up">SIGN UP</string>
+    <string name="select_user">Select User</string>
+    <string name="type_your_message">Type your message...</string>
+    <string name="type_a_message" />
+</resources>
