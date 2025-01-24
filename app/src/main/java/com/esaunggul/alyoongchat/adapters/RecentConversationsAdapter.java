@@ -39,7 +39,7 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecentConversationsAdapter.ConversionViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ConversionViewHolder holder, int position) {
         holder.setData(chatMessages.get(position));
     }
 
@@ -50,11 +50,11 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
 
     class ConversionViewHolder extends RecyclerView.ViewHolder {
 
-        ItemContainerRecentConversionBinding binding;
+        private final ItemContainerRecentConversionBinding binding;
 
         ConversionViewHolder(ItemContainerRecentConversionBinding itemContainerRecentConversionBinding) {
             super(itemContainerRecentConversionBinding.getRoot());
-            binding = itemContainerRecentConversionBinding;
+            this.binding = itemContainerRecentConversionBinding;
         }
 
         void setData(ChatMessage chatMessage) {
@@ -63,7 +63,7 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
             binding.textRecentMessage.setText(chatMessage.message);
             binding.getRoot().setOnClickListener(v -> {
                 User user = new User();
-                user.id = chatMessage.conversionName;
+                user.id = chatMessage.conversionId; // Fixed incorrect assignment
                 user.name = chatMessage.conversionName;
                 user.image = chatMessage.conversionImage;
                 conversionListener.onConversionClicked(user);
@@ -71,8 +71,11 @@ public class RecentConversationsAdapter extends RecyclerView.Adapter<RecentConve
         }
     }
 
-    private Bitmap getConversionImage(String conversionImage) {
-        byte [] bytes = Base64.decode(conversionImage, Base64.DEFAULT);
+    private Bitmap getConversionImage(String encodedImage) {
+        if (encodedImage == null || encodedImage.isEmpty()) {
+            return null; // Handle cases where the image is not available
+        }
+        byte[] bytes = Base64.decode(encodedImage, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
     }
 }

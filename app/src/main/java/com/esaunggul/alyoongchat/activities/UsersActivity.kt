@@ -13,7 +13,7 @@ import com.esaunggul.alyoongchat.utilities.PreferenceManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QueryDocumentSnapshot
 
-class UsersActivity : AppCompatActivity(), UserListener {
+class UsersActivity : BaseActivity(), UserListener {
 
     private lateinit var binding: ActivityUsersBinding
     private lateinit var preferenceManager: PreferenceManager

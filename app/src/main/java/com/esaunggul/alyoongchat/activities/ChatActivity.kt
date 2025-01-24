@@ -13,16 +13,12 @@ import com.esaunggul.alyoongchat.models.ChatMessage
 import com.esaunggul.alyoongchat.models.User
 import com.esaunggul.alyoongchat.utilities.Constants
 import com.esaunggul.alyoongchat.utilities.PreferenceManager
-import com.google.firebase.firestore.DocumentChange
-import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.*
 import com.google.firebase.firestore.EventListener
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.QuerySnapshot
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-class ChatActivity : AppCompatActivity() {
+class ChatActivity : BaseActivity() {
 
     private lateinit var binding: ActivityChatBinding
     private lateinit var receiverUser: User
@@ -31,15 +27,18 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var preferenceManager: PreferenceManager
     private lateinit var database: FirebaseFirestore
     private var conversionId: String? = null
+    private var isReceiverAvailable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         loadReceiverDetails()
         init()
         setListeners()
         listenMessages()
+        listenAvailabilityOfReceiver()
     }
 
     private fun init() {
@@ -57,12 +56,13 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun sendMessage() {
-        val message = hashMapOf(
+        val message = hashMapOf<String, Any>(
             Constants.KEY_SENDER_ID to (preferenceManager.getString(Constants.KEY_USER_ID) ?: ""),
             Constants.KEY_RECEIVER_ID to (receiverUser.id ?: ""),
             Constants.KEY_MESSAGE to binding.inputMessage.text.toString(),
-            Constants.KEY_TIMESTAMP to Date()
+            Constants.KEY_TIMESTAMP to FieldValue.serverTimestamp() // Gunakan FieldValue.serverTimestamp()
         )
+
         database.collection(Constants.KEY_COLLECTION_CHAT)
             .add(message)
             .addOnSuccessListener {
@@ -77,11 +77,30 @@ class ChatActivity : AppCompatActivity() {
                         Constants.KEY_RECEIVER_NAME to (receiverUser.name ?: ""),
                         Constants.KEY_RECEIVER_IMAGE to (receiverUser.image ?: ""),
                         Constants.KEY_LAST_MESSAGE to binding.inputMessage.text.toString(),
-                        Constants.KEY_TIMESTAMP to Date()
+                        Constants.KEY_TIMESTAMP to FieldValue.serverTimestamp()
                     )
                     addConversion(conversion)
                 }
             }
+    }
+
+    private fun listenAvailabilityOfReceiver() {
+        database.collection(Constants.KEY_COLLECTION_USERS)
+            .document(receiverUser.id ?: "")
+            .addSnapshotListener { value, error ->
+                if (error != null) {
+                    return@addSnapshotListener
+                }
+                if (value != null && value.exists()) {
+                    val availability = value.getLong(Constants.KEY_AVAILABILITY)?.toInt() ?: 0
+                    isReceiverAvailable = availability == 1
+                }
+            }
+        if(isReceiverAvailable) {
+            binding.textAvailability.visibility = View.VISIBLE
+        } else {
+            binding.textAvailability.visibility = View.GONE
+        }
     }
 
     private fun listenMessages() {
@@ -160,11 +179,13 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun updateConversion(message: String) {
-        val documentReference = database.collection(Constants.KEY_COLLECTION_CONVERSATIONS).document(conversionId!!)
-        documentReference.update(
-            Constants.KEY_LAST_MESSAGE, message,
-            Constants.KEY_TIMESTAMP, Date()
-        )
+        conversionId?.let {
+            val documentReference = database.collection(Constants.KEY_COLLECTION_CONVERSATIONS).document(it)
+            documentReference.update(
+                Constants.KEY_LAST_MESSAGE, message,
+                Constants.KEY_TIMESTAMP, Date()
+            )
+        }
     }
 
     private fun checkForConversion() {
@@ -191,5 +212,10 @@ class ChatActivity : AppCompatActivity() {
                     conversionId = documentSnapshot.id
                 }
             }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        listenAvailabilityOfReceiver()
     }
 }

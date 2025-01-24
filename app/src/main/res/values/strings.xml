@@ -15,4 +15,5 @@
     <string name="select_user">Select User</string>
     <string name="type_your_message">Type your message...</string>
     <string name="type_a_message" />
+    <string name="online">Online</string>
 </resources>
